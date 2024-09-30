@@ -3,8 +3,6 @@ from llama_index.core.llms import ChatMessage
 from pathlib import Path
 from src.utils import load_llm_config
 import pandas as pd
-from datetime import datetime
-
 
 
 def _turn_metadata_to_md(metadata, output_dir):

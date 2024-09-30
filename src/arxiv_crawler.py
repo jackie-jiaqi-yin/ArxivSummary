@@ -4,7 +4,7 @@ import requests
 import os
 from src.utils import create_saved_title
 
-def search_papers(query, start_date, end_date, max_results=100):
+def search_papers(query, max_results=100):
     """
     Search arXiv papers using arxiv API and return a list of papers
     :param query: the query string to filter the papers
@@ -22,13 +22,8 @@ def search_papers(query, start_date, end_date, max_results=100):
     )
 
     # filter papers based on date
-    results = []
-    for paper in client.results(search):
-        if start_date <= paper.published.date() <= end_date:
-            results.append(paper)
-        elif paper.published.date() < start_date:
-            break
-    return results
+    results = client.results(search)
+    return list(results)
 
 def create_paper_catalog(papers, save_dir, download_pdf=False):
     """
@@ -47,6 +42,7 @@ def create_paper_catalog(papers, save_dir, download_pdf=False):
         'authors': [],
         'abstract': [],
         'published': [],
+        'category': [],
         'pdf_url': [],
         'saved_title': []
     }
@@ -58,6 +54,7 @@ def create_paper_catalog(papers, save_dir, download_pdf=False):
         catalog['authors'].append(authors)
         catalog['abstract'].append(paper.summary)
         catalog['published'].append(paper.published)
+        catalog['category'].append(paper.primary_category)
         catalog['pdf_url'].append(paper.pdf_url)
         save_title = create_saved_title(paper.title)
         catalog['saved_title'].append(save_title)
