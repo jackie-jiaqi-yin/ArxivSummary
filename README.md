@@ -90,9 +90,9 @@ ArxivSummary is a Python project designed to crawl arXiv papers, create a catalo
 
 ## Output
 
-- A CSV catalog of papers will be saved in the specified output directory
-- A markdown file containing the metadata of papers will be generated in the output directory
-- A markdown file containing the summary of paper abstracts will be generated in the output directory
+- A CSV catalog of papers will be saved in the specified output directory, e.g. [catalog.csv](data%2Farxiv%2F2024-09-30%2Fcatalog.csv)
+- A markdown file containing the metadata of papers will be generated in the output directory, e.g. [catalog.md](data%2Farxiv%2F2024-09-30%2Fcatalog.md)
+- A markdown file containing the summary of paper abstracts will be generated in the output directory, e.g. [abstract_summary.md](data%2Farxiv%2F2024-09-30%2Fabstract_summary.md)
 
 ## Summary Generation
 
