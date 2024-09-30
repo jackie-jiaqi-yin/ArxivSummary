@@ -6,7 +6,7 @@ from llama_index.core import Settings
 from llama_index.llms.azure_openai import AzureOpenAI
 from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding
 from PyPDF2 import PdfReader
-import pandas as pd
+import re
 
 def load_config(config_path):
     if not os.path.exists(config_path):
@@ -14,6 +14,14 @@ def load_config(config_path):
     with open(config_path, 'r') as f:
         config = yaml.safe_load(f)
     return config
+
+def create_saved_title(title):
+    # replace space with "_"
+    title = title.replace(' ', '_')
+    # remove non-letter or non-digit characters
+    cleaned_title = re.sub(r'[^a-zA-Z0-9_]', '', title)
+    return cleaned_title
+
 
 def format_date(date_str):
     if date_str is None:
@@ -25,15 +33,15 @@ def format_date(date_str):
 def load_llm_config():
     load_dotenv()
     llm = AzureOpenAI(
-        model_name='gpt-4o',
-        engine='gpt-4o',
+        model_name=os.getenv('MODEL_NAME'),
+        engine=os.getenv('ENGINE'),
         azure_endpoint=os.getenv('AZURE_OPENAI_ENDPOINT'),
         api_version=os.getenv('GPT_API_VERSION'),
         api_key=os.getenv('AZURE_OPENAI_API_KEY'),
     )
     embed_model = AzureOpenAIEmbedding(
-        model='text-embedding-ada-002',
-        engine='text-embedding-ada-002',
+        model=os.getenv('EMBEDDING_MODEL_NAME'),
+        engine=os.getenv('EMBEDDING_ENGINE'),
         api_key=os.getenv('AZURE_OPENAI_API_KEY'),
         azure_endpoint=os.getenv('AZURE_OPENAI_ENDPOINT'),
         api_version='2024-02-01'

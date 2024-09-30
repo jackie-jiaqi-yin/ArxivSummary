@@ -1,18 +1,21 @@
 arxiv_crawl:
-  run: False
+  run: True
+  pdf_download: False
   query: '(cat:cs.CL OR cat:cs.AI) AND (ti:"language model" OR abs:"language model" OR ti:LLM OR abs:LLM)'
-  max_results: 88
-  start_date: '2024-09-26'
-  end_date: '2024-09-26'
+  max_results: 200
+  start_date: '2024-09-21'
+  end_date: '2024-09-27'
   output_dir: 'data/arxiv'
 
 summary:
   run: True
-  mode: 'abstract'
-  input_dir: 'data/arxiv/2024-09-26'
-  output_dir: 'data/arxiv/2024-09-26'
+  input_dir: 'data/arxiv/2024-09-21'
+  output_dir: 'data/arxiv/2024-09-21'
   system_query: "You are an expert in natural language processing and language models. Your task is to analyze a collection of paper abstracts in this field, provided in a markdown file containing the paper title, authors, abstract, and PDF URL for each paper. Instead of summarizing individual abstracts, focus on synthesizing information across all papers to provide a comprehensive overview of the research landscape.
    Perform the following tasks:
+   
+   Paper Catalog:
+   List the number of papers and their published date range which you have analyzed.
     
     Identify Key Themes:
     

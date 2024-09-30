@@ -1,9 +1,8 @@
 import arxiv
 import pandas as pd
-from datetime import datetime, timedelta
 import requests
-import io
 import os
+from src.utils import create_saved_title
 
 def search_papers(query, start_date, end_date, max_results=100):
     """
@@ -31,19 +30,19 @@ def search_papers(query, start_date, end_date, max_results=100):
             break
     return results
 
-def download_papers(papers, save_dir):
+def create_paper_catalog(papers, save_dir, download_pdf=False):
     """
-    Download the papers as pdf files and save a csv file with metadata
-    :param papers: the results from search_papers
-    :param save_dir: the directory to save the papers
-    :return: metadata dataframe
+    Create a catalog of papers and download the pdfs
+    :param papers: a list of papers
+    :param save_dir: the directory to save the pdfs
+    :param download_pdf: whether to download the pdfs
     """
     if len(papers) == 0:
         print('No papers found')
         return None
     if not os.path.exists(save_dir):
         os.makedirs(save_dir, exist_ok=True)
-    metadata = {
+    catalog = {
         'title': [],
         'authors': [],
         'abstract': [],
@@ -51,24 +50,33 @@ def download_papers(papers, save_dir):
         'pdf_url': [],
         'saved_title': []
     }
+    
+    # create catalog
     for paper in papers:
+        catalog['title'].append(paper.title)
+        authors = ', '.join(author.name for author in paper.authors)
+        catalog['authors'].append(authors)
+        catalog['abstract'].append(paper.summary)
+        catalog['published'].append(paper.published)
+        catalog['pdf_url'].append(paper.pdf_url)
+        save_title = create_saved_title(paper.title)
+        catalog['saved_title'].append(save_title)
+    df = pd.DataFrame(catalog)
+    df.to_csv(f'{save_dir}/catalog.csv', index=False)
+    print(f"Saved {df.shape[0]} papers to {save_dir}/catalog.csv")
+    if download_pdf:
+        pdf_count = 0
+        for i, row in df.iterrows():
+            title = row['saved_title']
+            pdf_url = row['pdf_url']
+            try:
+                response = requests.get(pdf_url)
+                with open(f'{save_dir}/{title}.pdf', 'wb') as f:
+                    f.write(response.content)
+                pdf_count += 1
+            except Exception as e:
+                print(f"Failed to download {title}")
+        print(f"Downloaded {pdf_count} papers")
 
-        # download pdf
-        # remove the special charaters and spaces from the title
-        title = paper.title.replace(' ', '_').replace('/', '_')
-        try:
-            paper.download_pdf(dirpath=save_dir, filename=f"{title}.pdf")
-            metadata['title'].append(paper.title)
-            authors = ', '.join(author.name for author in paper.authors)
-            metadata['authors'].append(authors)
-            metadata['abstract'].append(paper.summary)
-            metadata['published'].append(paper.published)
-            metadata['pdf_url'].append(paper.pdf_url)
-            metadata['saved_title'].append(title)
-        except Exception as e:
-            print(f"Failed to download {paper.title}")
-    df = pd.DataFrame(metadata)
-    print(f"Downloaded {df.shape[0]} papers")
-    df.to_csv(f'{save_dir}/metadata.csv', index=False)
     return df
 

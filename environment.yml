@@ -10,10 +10,7 @@ dependencies:
     - requests
     - PyPDF2
     - llama-index
-    - openai
-    - torch
-    - transformers
-    - dotenv
+    - python-dotenv
     - llama-index-llms-azure-openai
-    - PyPDF2
+    - llama-index-embeddings-azure-openai
     - pandas
