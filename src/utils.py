@@ -39,16 +39,8 @@ def load_llm_config():
         api_version=os.getenv('GPT_API_VERSION'),
         api_key=os.getenv('AZURE_OPENAI_API_KEY'),
     )
-    embed_model = AzureOpenAIEmbedding(
-        model=os.getenv('EMBEDDING_MODEL_NAME'),
-        engine=os.getenv('EMBEDDING_ENGINE'),
-        api_key=os.getenv('AZURE_OPENAI_API_KEY'),
-        azure_endpoint=os.getenv('AZURE_OPENAI_ENDPOINT'),
-        api_version='2024-02-01'
-    )
-    Settings.llm = llm
-    Settings.embed_model = embed_model
-    return llm, embed_model
+
+    return llm
 
 def extract_text_from_pdf(pdf_path):
     with open(pdf_path, 'rb') as f:

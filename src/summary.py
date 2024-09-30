@@ -42,7 +42,7 @@ def summarize_abstracts(input_file, output_dir, summary_query):
     md_text = Path(input_file).read_text(encoding='utf-8')
     if not os.path.exists(output_dir):
         os.makedirs(output_dir, exist_ok=True)
-    llm, _ = load_llm_config()
+    llm = load_llm_config()
     messages = [
         ChatMessage(role='system', content=summary_query),
         ChatMessage(role='user', content=f'Please summarize the abstracts: {md_text}')
