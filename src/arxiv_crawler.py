@@ -38,6 +38,9 @@ def download_papers(papers, save_dir):
     :param save_dir: the directory to save the papers
     :return: metadata dataframe
     """
+    if len(papers) == 0:
+        print('No papers found')
+        return None
     if not os.path.exists(save_dir):
         os.makedirs(save_dir, exist_ok=True)
     metadata = {
@@ -46,19 +49,26 @@ def download_papers(papers, save_dir):
         'abstract': [],
         'published': [],
         'pdf_url': [],
+        'saved_title': []
     }
     for paper in papers:
-        metadata['title'].append(paper.title)
-        authors = ', '.join(author.name for author in paper.authors)
-        metadata['authors'].append(authors)
-        metadata['abstract'].append(paper.summary)
-        metadata['published'].append(paper.published)
-        metadata['pdf_url'].append(paper.pdf_url)
+
         # download pdf
         # remove the special charaters and spaces from the title
         title = paper.title.replace(' ', '_').replace('/', '_')
-        paper.download_pdf(dirpath=save_dir, filename=f"{title}.pdf")
+        try:
+            paper.download_pdf(dirpath=save_dir, filename=f"{title}.pdf")
+            metadata['title'].append(paper.title)
+            authors = ', '.join(author.name for author in paper.authors)
+            metadata['authors'].append(authors)
+            metadata['abstract'].append(paper.summary)
+            metadata['published'].append(paper.published)
+            metadata['pdf_url'].append(paper.pdf_url)
+            metadata['saved_title'].append(title)
+        except Exception as e:
+            print(f"Failed to download {paper.title}")
     df = pd.DataFrame(metadata)
+    print(f"Downloaded {df.shape[0]} papers")
     df.to_csv(f'{save_dir}/metadata.csv', index=False)
     return df
 

@@ -1,0 +1,14 @@
+arxiv_crawl:
+  run: False
+  query: '(cat:cs.CL OR cat:cs.AI) AND (ti:"language model" OR abs:"language model" OR ti:LLM OR abs:LLM)'
+  max_results: 88
+  start_date: '2024-09-26'
+  end_date: '2024-09-26'
+  output_dir: 'data/arxiv'
+
+summary:
+  run: True
+  mode: 'abstract'
+  input_dir: 'data/arxiv/2024-09-26'
+  output_dir: 'data/arxiv/2024-09-26'
+  summary_query: 'summarize abstracts'

@@ -13,3 +13,7 @@ dependencies:
     - openai
     - torch
     - transformers
+    - dotenv
+    - llama-index-llms-azure-openai
+    - PyPDF2
+    - pandas
