@@ -1,14 +1,11 @@
 import os
 
-from llama_index.core.composability import QASummaryQueryEngineBuilder
-from llama_index.core.node_parser import SentenceSplitter, MarkdownNodeParser
-from llama_index.core import SimpleDirectoryReader
-from llama_index.readers.file import FlatReader
-
+from llama_index.core.llms import ChatMessage
+from llama_index.llms.azure_openai import AzureOpenAI
 from pathlib import Path
 from src.utils import load_llm_config
 import pandas as pd
-
+from dotenv import load_dotenv
 
 
 def _turn_metadata_to_md(metadata, output_dir):
@@ -31,33 +28,39 @@ def _turn_metadata_to_md(metadata, output_dir):
     print(f"Metadata saved to {output_file}")
     return output_file
 
-def create_query_engine_from_abstracts(documents):
-    """
-    Create a query engine
-    :param documents: the documents to create the query engine
-    :return: the query engine
-    """
-    parser = MarkdownNodeParser()
-    splitter = SentenceSplitter(chunk_size=1024, chunk_overlap=20)
-    transformation = [parser, splitter]
-    query_engine_builder = QASummaryQueryEngineBuilder(transformations=transformation)
-    query_engine = query_engine_builder.build_from_documents(documents)
-    # save the query engine
-
-
 
 def summarize_abstracts(input_file, output_dir, summary_query):
     """
     Summarize all the abstracts with the summary_query
-    :param input_file: the markdown file containing the metadata
+    :param input_file: the markdown file path containing the metadata
     :param output_dir: the directory to save the summaries
     :param summary_query: the query to summarize the abstracts
     :return: None
     """
+
     if not os.path.exists(input_file):
         raise FileNotFoundError(f"File not found: {input_file}")
+    md_text = Path(input_file).read_text()
     if not os.path.exists(output_dir):
         os.makedirs(output_dir, exist_ok=True)
+    load_dotenv()
+    llm = AzureOpenAI(
+        model_name='gpt-4o-0806',
+        engine='gpt-4o',
+        azure_endpoint=os.getenv('AZURE_OPENAI_ENDPOINT'),
+        api_version=os.getenv('GPT_API_VERSION'),
+        api_key=os.getenv('AZURE_OPENAI_API_KEY'),
+    )
+    messages = [
+        ChatMessage(role='system', content=summary_query),
+        ChatMessage(role='user', content=f'Please summarize the abstracts: {md_text}')
+    ]
+    response = llm.chat(messages)
+    # save
+    with open(os.path.join(output_dir, 'abstract_summary.md'), 'w') as f:
+        f.write(response.message.content)
+    print(f"Summaries saved to {output_dir}/abstract_summary.md")
+
 
 def summary_each_document(input_dir, summary_query):
     """
@@ -73,7 +76,7 @@ def summary_each_document(input_dir, summary_query):
     pass
 
 
-def summarize_papers(mode, input_file=None, input_dir=None, output_dir=None, summary_query=None):
+def summarize_papers(mode, input_file=None, input_dir=None, output_dir=None, system_query=None):
     """
     Summarize papers
     :param mode: the mode to summarize. It can be 'abstract' or 'document'
@@ -89,8 +92,8 @@ def summarize_papers(mode, input_file=None, input_dir=None, output_dir=None, sum
         # turn the csv to markdown
         metadata = pd.read_csv(input_file)
         markdown_path = _turn_metadata_to_md(metadata, output_dir)
-        summarize_abstracts(markdown_path, output_dir, summary_query)
+        summarize_abstracts(markdown_path, output_dir, system_query)
     elif mode == 'document':
-        summary_each_document(input_dir, summary_query)
+        pass
     else:
         raise ValueError(f"Invalid mode: {mode}")
