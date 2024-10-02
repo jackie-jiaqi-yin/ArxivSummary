@@ -1,0 +1,11 @@
+name: arxiv_crawl
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip=24.0
+  - pip:
+      - llama-index
+      - llama-index-llms-azure-openai
+      - pandas

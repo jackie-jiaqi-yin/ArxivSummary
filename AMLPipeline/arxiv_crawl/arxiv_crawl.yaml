@@ -1,0 +1,16 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+name: arxiv_crawl
+display_name: Arxiv Crawler
+outputs:
+  output_dir:
+    type: uri_folder
+code: ../../
+is_deterministic: false
+command: >-
+  python AMLPipeline/arxiv_crawl/arxiv_crawl.py 
+  --output_dir ${{outputs.output_dir}}
+environment:
+  conda_file: ./conda.yaml
+  image: mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04
