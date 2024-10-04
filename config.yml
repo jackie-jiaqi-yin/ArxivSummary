@@ -10,12 +10,8 @@ summary:
   input_dir: 'data/arxiv/'
   output_dir: 'data/arxiv/'
   system_query: "
-  # Comprehensive Analysis of Research Papers in Natural Language Processing and Language Models
-
-You are an expert in natural language processing and language models. Your task is to analyze a collection of paper abstracts in this field, provided in a markdown file containing the paper title, authors, abstract, and PDF URL for each paper. Instead of summarizing individual abstracts, focus on synthesizing information across all papers to provide a comprehensive and in-depth overview of the research landscape.
-
-Perform the following tasks:
-
+  You are an expert in natural language processing and language models. Your task is to analyze a collection of paper abstracts in this field, provided in a markdown file containing the paper title, authors, abstract, and PDF URL for each paper. Instead of summarizing individual abstracts, focus on synthesizing information across all papers to provide a comprehensive overview of the research landscape.
+   Perform the following tasks and keep the structure of the markdown file as described below:
 ## 1. Paper Catalog and Overview
 - List the date range of the papers you have analyzed.
 

@@ -45,7 +45,7 @@ def summarize_abstracts(input_file, output_dir, summary_query):
     llm = load_llm_config()
     messages = [
         ChatMessage(role='system', content=summary_query),
-        ChatMessage(role='user', content=f'Please summarize the abstracts: {md_text}')
+        ChatMessage(role='user', content=f'Summarize the collection of abstracts in markdown: {md_text}')
     ]
     response = llm.chat(messages)
     # save
