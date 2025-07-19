@@ -1,0 +1,30 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+name: arxiv_crawl
+display_name: Arxiv Crawler
+inputs:
+  max_results:
+    type: number
+    default: 100
+  query:
+    type: string
+    default: '(cat:cs.CL OR cat:cs.AI) AND (ti:"large language model" OR abs:"large language model" OR ti:LLM OR abs:LLM)'
+  pdf_download:
+    type: boolean
+    default: false
+outputs:
+  output_dir:
+    type: uri_folder
+code: ../../
+is_deterministic: false
+command: >-
+  python AMLPipeline/arxiv_crawl/arxiv_crawl.py 
+  --max_results ${{inputs.max_results}}
+  --query '${{inputs.query}}'
+  --pdf_download ${{inputs.pdf_download}}
+  --output_dir ${{outputs.output_dir}}
+
+environment:
+  conda_file: ./conda.yaml
+  image: mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04
