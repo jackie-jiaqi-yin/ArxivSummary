@@ -1,0 +1,68 @@
+name: submit-agentic-ai-arxiv-summary-pipeline
+
+trigger:
+- none
+
+schedules:
+- cron: "0 13 1,15 * *"
+  displayName: Bi-monthly ArXiv Summary Pipeline - 1st and 15th of every month at 5AM PST
+  branches:
+    include:
+    - main
+  always: true
+
+variables:
+  subscription_id: 'YOUR_AZURE_SUBSCRIPTION_ID' # your subscription id
+  service-connection: 'YOUR_AZURE_SERVICE_CONNECTION_NAME' # replace with your service connection name using user-assigned managed identity
+  resource-group: 'YOUR_RESOURCE_GROUP_NAME' # your resource group name
+  workspace: 'YOUR_AML_WORKSPACE_NAME' # your workspace name
+
+jobs:
+
+- job: ArxivSummaryPipeline
+  displayName: ArXiv Summary Pipeline with Logic App Notification
+  timeoutInMinutes: 120 
+  pool:
+    vmImage: ubuntu-latest
+  steps:
+  - task: UsePythonVersion@0
+    displayName: Use Python ==3.10
+    inputs:
+      versionSpec: '==3.10'
+  
+  - bash: |
+      set -ex
+      pip install azure-ai-ml azure-identity
+      az version
+      az extension add -n ml
+    displayName: Install required Python AML packages
+  
+  - task: AzureCLI@2
+    name: arxiv_summary_pipeline_job
+    displayName: Submit ArXiv Summary Pipeline
+    inputs:
+      azureSubscription: $(service-connection)
+      scriptLocation: inlineScript
+      scriptType: bash
+      inlineScript: |
+        cd AMLPipeline
+        job_name=$(python submit_agentic_ai_pipeline.py | grep -oP 'Job name: \K[^"]*' | tail -1)
+        echo "Submitted job: $job_name"
+        # Set output variable for next task
+        echo "##vso[task.setvariable variable=arxiv_job_name;isOutput=true;]$job_name"
+
+- job: WaitForArxivSummaryPipelineCompletion
+  displayName: Wait for ArXiv Summary Pipeline Completion
+  pool: server
+  timeoutInMinutes: 0 # No timeout for waiting
+  dependsOn: ArxivSummaryPipeline
+  variables:
+    # Save the AzureML job name from previous step
+    arxiv_job_name: $[ dependencies.ArxivSummaryPipeline.outputs['arxiv_summary_pipeline_job.arxiv_job_name'] ]
+  steps:
+  - task: AzureMLJobWaitTask@1
+    inputs:
+      serviceConnection: $(service-connection)
+      resourceGroupName: $(resource-group)
+      azureMLWorkspaceName: $(workspace)
+      azureMLJobName: $(arxiv_job_name)
