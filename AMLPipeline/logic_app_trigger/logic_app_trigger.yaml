@@ -1,0 +1,28 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+name: logic_app_trigger
+display_name: trigger azure logic app
+inputs:
+  input_dir:
+    type: uri_folder
+  logic_app_name:
+    type: string
+    default: 'llm-newsletter-logic-app-webhook-url'  # Name of the Logic App secret in Key Vault
+  blob_path_prefix:
+    type: string
+    default: 'llm/ArxivSummary/current'  # Blob path prefix for HTML file
+outputs:
+  output_dir:
+    type: uri_folder
+code: ../../
+is_deterministic: false
+command: >-
+  python AMLPipeline/logic_app_trigger/logic_app_trigger.py
+  --input_dir ${{inputs.input_dir}}
+  --output_dir ${{outputs.output_dir}}
+  --logic_app_name ${{inputs.logic_app_name}}
+  --blob_path_prefix ${{inputs.blob_path_prefix}}
+environment:
+  conda_file: ./conda.yaml
+  image: mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04

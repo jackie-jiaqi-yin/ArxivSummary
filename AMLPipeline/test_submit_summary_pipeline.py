@@ -1,31 +1,24 @@
-arxiv_crawl:
-  run: True
-  pdf_download: False
-  query: '(cat:cs.CL OR cat:cs.AI) AND (ti:"large language model" OR abs:"large language model" OR ti:LLM OR abs:LLM)'
-  latest_num_papers: 100
-  output_dir: 'data/arxiv'
+import os
+# set the working directory as parent's of the script
+os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+print(os.getcwd())
 
-summary:
-  run: True
-  auth_method: 'use_key'  # Options: 'use_azure_ad', 'use_key', 'use_mi'
-  # api_key: Set AZURE_OPENAI_API_KEY environment variable when using 'use_key'
-  mi_client_id: null  # Required when auth_method is 'use_mi'
-  model_name: 'gpt-4o'
-  batch_size: 20
-  max_concurrent_batches: 5
-  input_dir: 'data/arxiv/'
-  output_dir: 'data/arxiv/'
-  batch_system_query: "**You are an expert in natural language processing and language models. Your task is to analyze a batch of paper abstracts and provide a comprehensive summary that will later be combined with other batch summaries.**. Whenever mention any paper, **include its title and URL**.
+from azure.ai.ml import MLClient, load_component, Input, Output
+from azure.identity import DefaultAzureCredential
+from azure.ai.ml.dsl import pipeline
 
-  **Focus on:**
-  1. **Key Research Themes** - Identify 3-4 major themes in this batch
-  2. **Methodological Approaches** - Highlight 2-3 main approaches used
-  3. **Notable Papers** - Identify 2-3 most innovative or impactful papers
-  4. **Technical Contributions** - Summarize main technical advances
-  5. **Future Directions** - Any emerging trends or challenges mentioned
+# Import our Azure configuration helper for local execution
+from AMLPipeline.azure_config_local import get_azure_ml_client, get_datastore_path
 
-  **Keep the summary concise but comprehensive, as it will be combined with other batch summaries later.**"
-  system_query: "**You are an expert in natural language processing and language models. Your task is to analyze a collection of paper abstracts in this field, provided in a markdown file containing the paper title, authors, abstract, and PDF URL for each paper. Instead of summarizing individual abstracts, focus on synthesizing information across all papers to provide a comprehensive overview of the research landscape.**
+credential = DefaultAzureCredential()
+
+summary_component = load_component(source = 'AMLPipeline/summary/summary.yaml')
+cpu_compute_target = os.getenv('AZURE_COMPUTE_CLUSTER_NAME', 'cpu-cluster')
+dir = get_datastore_path("ArxivSummary")
+input_dir = f'{dir}/current/'
+output_dir = f'{dir}/current/'
+
+system_query = """**You are an expert in natural language processing and language models. Your task is to analyze a collection of paper abstracts in this field, provided in a markdown file containing the paper title, authors, abstract, and PDF URL for each paper. Instead of summarizing individual abstracts, focus on synthesizing information across all papers to provide a comprehensive overview of the research landscape.**
 
     **General Instructions:**
 
@@ -100,4 +93,45 @@ summary:
     - **Deep Insights:** Provide deep insights into the collective body of research, highlighting connections between papers and themes.
     - **Unique Content:** Before finalizing, review each section to ensure that content is not duplicated elsewhere in the document.
     - **Expert Analysis:** Use your expertise to draw meaningful conclusions and provide context that goes beyond what's explicitly stated in the abstracts.
-    - **Paper Citations:** Ensure that every mention of a specific paper includes its title and URL."
+    - **Paper Citations:** Ensure that every mention of a specific paper includes its title and URL."""
+
+batch_system_query = """**You are an expert in natural language processing and language models. Your task is to analyze a batch of paper abstracts and provide a comprehensive summary that will later be combined with other batch summaries.**. Whenever mention any paper, **include its title and URL**.
+
+  **Focus on:**
+  1. **Key Research Themes** - Identify 3-4 major themes in this batch
+  2. **Methodological Approaches** - Highlight 2-3 main approaches used
+  3. **Notable Papers** - Identify 2-3 most innovative or impactful papers
+  4. **Technical Contributions** - Summarize main technical advances
+  5. **Future Directions** - Any emerging trends or challenges mentioned
+
+  **Keep the summary concise but comprehensive, as it will be combined with other batch summaries later.**"""
+
+@pipeline(
+    default_compute=cpu_compute_target,
+    description = 'llm paper summary' 
+)
+
+def test_summary_pipeline(input_dir):
+    summary_node =  summary_component(
+        input_dir = input_dir,
+        system_query = system_query,
+        batch_system_query = batch_system_query,
+        model_name = 'gpt-4o',
+        batch_size = 20,
+        max_concurrent_batches = 5,
+    )
+    summary_node.outputs.output_dir = Output(
+        path = output_dir,
+        type = 'uri_folder',
+        mode = 'rw_mount'
+    )
+
+
+pipeline_job = test_summary_pipeline(
+    input_dir = Input(path=input_dir, type='uri_folder', mode='rw_mount')
+)
+
+# Get ML client using environment variables
+ml_client = get_azure_ml_client()
+
+ml_client.jobs.create_or_update(pipeline_job, experiment_name='test_summary_pipeline',)                    

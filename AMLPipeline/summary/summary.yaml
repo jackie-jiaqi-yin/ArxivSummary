@@ -1,0 +1,48 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+name: summary
+display_name: Arxiv Summary
+inputs:
+  input_dir:
+    type: uri_folder
+  system_query:
+    type: string
+    default: 'You are an AI research assistant. Analyze the following research paper and provide a comprehensive summary.'
+  batch_system_query:
+    type: string
+    default: 'You are an AI research assistant. Analyze the following research papers and provide comprehensive summaries. Each summary should include the paper title, URL, key contributions, methodology, and main findings.'
+  auth_method:
+    type: string
+    default: 'use_mi'
+  mi_client_id:
+    type: string
+    default: '4ada34c5-d75a-47df-b84e-dfbe186f4ba8'
+  model_name:
+    type: string
+    default: 'gpt-4o'
+  batch_size:
+    type: number
+    default: 20
+  max_concurrent_batches:
+    type: number
+    default: 5
+outputs:
+  output_dir:
+    type: uri_folder
+code: ../../
+is_deterministic: false
+command: >-
+  python AMLPipeline/summary/summary.py 
+  --input_dir ${{inputs.input_dir}}
+  --output_dir ${{outputs.output_dir}}
+  --system_query "${{inputs.system_query}}"
+  --batch_system_query "${{inputs.batch_system_query}}"
+  --auth_method ${{inputs.auth_method}}
+  --mi_client_id ${{inputs.mi_client_id}}
+  --model_name ${{inputs.model_name}}
+  --batch_size ${{inputs.batch_size}}
+  --max_concurrent_batches ${{inputs.max_concurrent_batches}}
+environment:
+  conda_file: ./conda.yaml
+  image: mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04

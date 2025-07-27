@@ -1,0 +1,20 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+name: post_process
+display_name: copy data
+inputs:
+  input_dir:
+    type: uri_folder
+outputs:
+  output_dir:
+    type: uri_folder
+code: ../../
+is_deterministic: false
+command: >-
+  python AMLPipeline/post_process/post_process.py
+  --input_dir ${{inputs.input_dir}}
+  --output_dir ${{outputs.output_dir}}
+environment:
+  conda_file: ./conda.yaml
+  image: mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04

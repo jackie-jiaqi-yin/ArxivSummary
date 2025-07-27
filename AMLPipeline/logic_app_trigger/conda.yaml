@@ -1,0 +1,12 @@
+name: logic_app_trigger
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+    - requests==2.32.3
+    - python-dotenv==1.0.1
+    - azure-identity==1.15.0
+    - azure-keyvault-secrets==4.7.0

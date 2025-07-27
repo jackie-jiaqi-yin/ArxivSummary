@@ -14,3 +14,11 @@ dependencies:
     - llama-index-llms-azure-openai
     - llama-index-embeddings-azure-openai
     - pandas
+    - markdown2
+    - azure-keyvault
+    - pyarrow
+    - matplotlib
+    - seaborn
+    - spacy
+    - sentence_transformers
+    - plotly
